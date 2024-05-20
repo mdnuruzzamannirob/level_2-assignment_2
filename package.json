@@ -7,6 +7,8 @@
     "build": "tsc",
     "lint": "eslint src --ignore-path .eslintignore --ext .ts",
     "lint:fix": "npm run lint src --fix",
+    "prettier": "prettier --ignore-path .gitignore --write \"./src**/*.+(js|ts|json)\"",
+    "prettier:fix": "npx prettier --write src",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
