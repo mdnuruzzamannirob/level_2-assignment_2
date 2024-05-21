@@ -39,7 +39,8 @@ const createProduct = async (req: Request, res: Response) => {
 // get all products
 const getAllProducts = async (req: Request, res: Response) => {
   try {
-    const result = await ProductServices.getAllProductsFromDB();
+    const queryParams = req.query;
+    const result = await ProductServices.getAllProductsFromDB(queryParams);
 
     res.status(200).json({
       success: true,
@@ -59,7 +60,13 @@ const getAllProducts = async (req: Request, res: Response) => {
 const getSingleProduct = async (req: Request, res: Response) => {
   try {
     const { productId } = req.params;
+    if (productId) {
+    }
+    const query = req.query;
+    console.log(query);
     const result = await ProductServices.getSingleProductFromDB(productId);
+
+    console.log(result);
 
     res.status(200).json({
       success: true,
@@ -67,6 +74,7 @@ const getSingleProduct = async (req: Request, res: Response) => {
       data: result,
     });
   } catch (error) {
+    console.log(error);
     res.status(500).json({
       success: false,
       message: 'Failed to fetch Product!',

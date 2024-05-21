@@ -8,14 +8,38 @@ const createProductIntoDB = async (product: TProduct) => {
 };
 
 // get all products
-const getAllProductsFromDB = async () => {
-  const result = await ProductModel.find();
+const getAllProductsFromDB = async (queryParams: any) => {
+  let query = {};
+
+  // If queryParams is not empty, construct the query
+  if (Object.keys(queryParams).length !== 0) {
+    const orConditions = [];
+    if (queryParams.name) {
+      orConditions.push({
+        name: { $regex: new RegExp(queryParams.name, 'i') },
+      });
+    }
+    if (queryParams.description) {
+      orConditions.push({
+        description: { $regex: new RegExp(queryParams.description, 'i') },
+      });
+    }
+    if (queryParams.tags) {
+      orConditions.push({
+        tags: { $regex: new RegExp(queryParams.tags, 'i') },
+      });
+    }
+
+    query = { $or: orConditions };
+  }
+
+  const result = await ProductModel.find(query);
   return result;
 };
 
-// get single product
+// get single product by params
 const getSingleProductFromDB = async (_id: string) => {
-  const result = await ProductModel.findOne({ $in: _id });
+  const result = await ProductModel.findOne({ _id });
   return result;
 };
 
