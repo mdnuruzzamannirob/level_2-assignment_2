@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { ProductServices } from './product.service';
 import productValidationSchema from './product.validator';
+import { MongoError } from 'mongodb';
 
 // create a new product
 const createProduct = async (req: Request, res: Response) => {
@@ -18,11 +19,20 @@ const createProduct = async (req: Request, res: Response) => {
       data: result,
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Failed to create a Product!',
-      error: error,
-    });
+    // Custom error handling for duplicate key error
+    if (error instanceof MongoError && error.code === 11000) {
+      res.status(400).json({
+        success: false,
+        message: 'Product with this name already exists!',
+      });
+    } else {
+      // Other error handling
+      res.status(500).json({
+        success: false,
+        message: 'Failed to create a Product!',
+        error,
+      });
+    }
   }
 };
 
@@ -40,7 +50,7 @@ const getAllProducts = async (req: Request, res: Response) => {
     res.status(500).json({
       success: false,
       message: 'Failed to fetched Products!',
-      error: error,
+      error,
     });
   }
 };
@@ -60,7 +70,7 @@ const getSingleProduct = async (req: Request, res: Response) => {
     res.status(500).json({
       success: false,
       message: 'Failed to fetch Product!',
-      error: error,
+      error,
     });
   }
 };
@@ -88,7 +98,7 @@ const updateSingleProduct = async (req: Request, res: Response) => {
     res.status(500).json({
       success: false,
       message: 'Failed to update Product!',
-      error: error,
+      error,
     });
   }
 };
@@ -97,18 +107,26 @@ const updateSingleProduct = async (req: Request, res: Response) => {
 const deleteSingleProduct = async (req: Request, res: Response) => {
   try {
     const { productId } = req.params;
-    await ProductServices.deleteSingleProductFromDB(productId);
+    const result = await ProductServices.deleteSingleProductFromDB(productId);
 
-    res.status(200).json({
-      success: true,
-      message: 'Product deleted successfully!',
-      data: null,
-    });
+    if (result)
+      res.status(200).json({
+        success: true,
+        message: 'Product deleted successfully!',
+        data: null,
+      });
+    else {
+      res.status(500).json({
+        success: false,
+        message: 'Failed to delete Product!',
+        error: 'Product not found',
+      });
+    }
   } catch (error) {
     res.status(500).json({
       success: false,
       message: 'Failed to delete Product!',
-      error: error,
+      error,
     });
   }
 };

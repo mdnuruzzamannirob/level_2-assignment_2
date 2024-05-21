@@ -15,7 +15,7 @@ const getAllProductsFromDB = async () => {
 
 // get single product
 const getSingleProductFromDB = async (_id: string) => {
-  const result = await ProductModel.findOne({ _id });
+  const result = await ProductModel.findOne({ $in: _id });
   return result;
 };
 
@@ -24,13 +24,18 @@ const updateSingleProductFromDB = async (
   _id: string,
   updatedProductData: TProduct,
 ) => {
-  const result = await ProductModel.updateOne({ _id }, updatedProductData);
-  return result;
+  const updatedData = await ProductModel.updateOne({ _id }, updatedProductData);
+  if (updatedData.modifiedCount > 0) {
+    const result = await ProductModel.findOne({ _id });
+    return result;
+  }
+  return updatedData;
 };
 
 // delete single product
 const deleteSingleProductFromDB = async (_id: string) => {
-  const result = await ProductModel.deleteOne({ _id });
+  const result = await ProductModel.findByIdAndDelete({ _id });
+  console.log(result);
   return result;
 };
 
