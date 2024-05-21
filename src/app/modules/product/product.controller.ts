@@ -18,7 +18,11 @@ const createProduct = async (req: Request, res: Response) => {
       data: result,
     });
   } catch (error) {
-    console.log(error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to create a Product!',
+      error: error,
+    });
   }
 };
 
@@ -33,7 +37,11 @@ const getAllProducts = async (req: Request, res: Response) => {
       data: result,
     });
   } catch (error) {
-    console.log(error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetched Products!',
+      error: error,
+    });
   }
 };
 
@@ -49,7 +57,11 @@ const getSingleProduct = async (req: Request, res: Response) => {
       data: result,
     });
   } catch (error) {
-    console.log(error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch Product!',
+      error: error,
+    });
   }
 };
 
@@ -73,7 +85,11 @@ const updateSingleProduct = async (req: Request, res: Response) => {
       data: result,
     });
   } catch (error) {
-    console.log(error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update Product!',
+      error: error,
+    });
   }
 };
 
@@ -89,7 +105,11 @@ const deleteSingleProduct = async (req: Request, res: Response) => {
       data: null,
     });
   } catch (error) {
-    console.log(error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to delete Product!',
+      error: error,
+    });
   }
 };
 
