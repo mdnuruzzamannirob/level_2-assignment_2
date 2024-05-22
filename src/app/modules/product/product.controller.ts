@@ -54,7 +54,13 @@ const getAllProducts = async (req: Request, res: Response) => {
   try {
     const queryParams = req.query;
     const result = await ProductServices.getAllProductsFromDB(queryParams);
-    sendResponse(res, 200, true, 'Products fetched successfully!', result);
+    sendResponse(
+      res,
+      200,
+      true,
+      `${queryParams.searchTerm ? `Products matching search term '${queryParams.searchTerm}' fetched successfully!` : 'Products fetched successfully!'}`,
+      result,
+    );
   } catch (error) {
     handleError(res, error, 'Failed to fetch products!');
   }
