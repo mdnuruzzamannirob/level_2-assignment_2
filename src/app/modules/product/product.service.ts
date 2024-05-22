@@ -9,7 +9,7 @@ const createProductIntoDB = async (product: TProduct) => {
 
 // get all products
 const getAllProductsFromDB = async (queryParams: any) => {
-  let query: any = {};
+  let query: object = {};
 
   if (queryParams.searchTerm) {
     const searchRegex = new RegExp(queryParams.searchTerm, 'i'); // Case-insensitive regex for partial matches

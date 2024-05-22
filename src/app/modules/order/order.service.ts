@@ -19,7 +19,7 @@ const createOrderIntoDB = async (order: TOrder) => {
 
   // Update product inventory
   const newQuantity = product.inventory.quantity - quantity;
-  let inStock = newQuantity > 0;
+  const inStock = newQuantity > 0;
   const updateProductData = {
     $set: {
       'inventory.quantity': newQuantity,
@@ -42,7 +42,7 @@ const createOrderIntoDB = async (order: TOrder) => {
 };
 
 const getAllOrderFromDB = async (queryParams: any) => {
-  let query: any = {};
+  let query: object = {};
 
   if (queryParams.email) {
     query = {
