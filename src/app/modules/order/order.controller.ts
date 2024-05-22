@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import orderValidationSchema from './order.validator';
 import { OrderServices } from './order.service';
+import { CustomError } from '../../errors/customError';
 
 // create a new order
 const createOrder = async (req: Request, res: Response) => {
@@ -18,11 +19,18 @@ const createOrder = async (req: Request, res: Response) => {
       data: result,
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Failed to create a order!',
-      error,
-    });
+    if (error instanceof CustomError) {
+      res.status(error.status).json({
+        success: false,
+        message: error.message,
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        message: 'Failed to create a order!',
+        error,
+      });
+    }
   }
 };
 

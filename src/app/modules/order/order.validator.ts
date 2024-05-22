@@ -3,8 +3,8 @@ import { z } from 'zod';
 const orderValidationSchema = z.object({
   email: z
     .string({
-      required_error: 'email is required',
-      invalid_type_error: 'email must be a string',
+      required_error: 'Email is required',
+      invalid_type_error: 'Email must be a string',
     })
     .email({ message: 'Invalid email address' }),
   productId: z.string({
@@ -25,7 +25,7 @@ const orderValidationSchema = z.object({
       invalid_type_error: 'Quantity must be a number',
     })
     .int({ message: 'Quantity must be an integer' })
-    .min(0, { message: 'Quantity cannot be negative' }),
+    .min(1, { message: 'Quantity must be at least 1' }),
 });
 
 export default orderValidationSchema;
