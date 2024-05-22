@@ -24,6 +24,11 @@ const createOrder = async (req: Request, res: Response) => {
         success: false,
         message: error.message,
       });
+    } else if (error instanceof Error && error.name === 'CastError') {
+      res.status(400).json({
+        success: false,
+        message: 'Product not found!',
+      });
     } else {
       res.status(500).json({
         success: false,
