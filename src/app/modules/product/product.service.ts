@@ -9,28 +9,17 @@ const createProductIntoDB = async (product: TProduct) => {
 
 // get all products
 const getAllProductsFromDB = async (queryParams: any) => {
-  let query = {};
+  let query: any = {};
 
-  // If queryParams is not empty, construct the query
-  if (Object.keys(queryParams).length !== 0) {
-    const orConditions = [];
-    if (queryParams.name) {
-      orConditions.push({
-        name: { $regex: new RegExp(queryParams.name, 'i') },
-      });
-    }
-    if (queryParams.description) {
-      orConditions.push({
-        description: { $regex: new RegExp(queryParams.description, 'i') },
-      });
-    }
-    if (queryParams.tags) {
-      orConditions.push({
-        tags: { $regex: new RegExp(queryParams.tags, 'i') },
-      });
-    }
-
-    query = { $or: orConditions };
+  if (queryParams.searchTerm) {
+    const searchRegex = new RegExp(queryParams.searchTerm, 'i'); // Case-insensitive regex for partial matches
+    query = {
+      $or: [
+        { name: { $regex: searchRegex } },
+        { description: { $regex: searchRegex } },
+        { tags: { $in: [searchRegex] } }, // Matching any of the tags
+      ],
+    };
   }
 
   const result = await ProductModel.find(query);

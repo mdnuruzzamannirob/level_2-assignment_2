@@ -3,100 +3,86 @@ import { ProductServices } from './product.service';
 import productValidationSchema from './product.validator';
 import { MongoError } from 'mongodb';
 
-// create a new product
+// Helper function for sending responses
+const sendResponse = (
+  res: Response,
+  status: number,
+  success: boolean,
+  message: string,
+  data?: any,
+  error?: any,
+) => {
+  const response: any = { success, message };
+  if (data !== undefined) {
+    response.data = data;
+  }
+  if (error !== undefined) {
+    response.error = error;
+  }
+  res.status(status).json(response);
+};
+
+// Helper function for handling errors
+const handleError = (res: Response, error: any, defaultMessage: string) => {
+  if (error instanceof MongoError && error.code === 11000) {
+    sendResponse(res, 400, false, 'Product with this name already exists!');
+  } else if (error instanceof Error && error.name === 'CastError') {
+    sendResponse(res, 400, false, 'Product not found!');
+  } else {
+    console.error('Error:', error);
+    sendResponse(res, 500, false, defaultMessage, undefined, error);
+  }
+};
+
+// Create a new product
 const createProduct = async (req: Request, res: Response) => {
   try {
     const productData = req.body;
 
-    // zod validation
+    // Zod validation
     const zodParsedData = productValidationSchema.parse(productData);
 
     const result = await ProductServices.createProductIntoDB(zodParsedData);
-
-    res.status(200).json({
-      success: true,
-      message: 'Product created successfully!',
-      data: result,
-    });
+    sendResponse(res, 200, true, 'Product created successfully!', result);
   } catch (error) {
-    // Custom error handling for duplicate key error
-    if (error instanceof MongoError && error.code === 11000) {
-      res.status(400).json({
-        success: false,
-        message: 'Product with this name already exists!',
-      });
-    } else {
-      // Other error handling
-      res.status(500).json({
-        success: false,
-        message: 'Failed to create a product!',
-        error,
-      });
-    }
+    handleError(res, error, 'Failed to create a product!');
   }
 };
 
-// get all products
+// Get all products
 const getAllProducts = async (req: Request, res: Response) => {
   try {
     const queryParams = req.query;
     const result = await ProductServices.getAllProductsFromDB(queryParams);
-
-    res.status(200).json({
-      success: true,
-      message: 'Products fetched successfully!',
-      data: result,
-    });
+    sendResponse(res, 200, true, 'Products fetched successfully!', result);
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetched products!',
-      error,
-    });
+    handleError(res, error, 'Failed to fetch products!');
   }
 };
 
-// get single product
+// Get single product
 const getSingleProduct = async (req: Request, res: Response) => {
   try {
     const { productId } = req.params;
     const result = await ProductServices.getSingleProductFromDB(productId);
 
     if (result) {
-      res.status(200).json({
-        success: true,
-        message: 'Product fetched successfully!',
-        data: result,
-      });
+      sendResponse(res, 200, true, 'Product fetched successfully!', result);
     } else {
-      res.status(400).json({
-        success: false,
-        message: 'Product not found!',
-      });
+      sendResponse(res, 400, false, 'Product not found!');
     }
   } catch (error) {
-    if (error instanceof Error && error.name === 'CastError') {
-      res.status(400).json({
-        success: false,
-        message: 'Product not found!',
-      });
-    } else {
-      res.status(500).json({
-        success: false,
-        message: 'Failed to fetch product!',
-        error,
-      });
-    }
+    handleError(res, error, 'Failed to fetch product!');
   }
 };
 
-// get single product
+// Update single product
 const updateSingleProduct = async (req: Request, res: Response) => {
   try {
     const { productId } = req.params;
     const updatedProductData = req.body;
 
-    // zod validation
+    // Zod validation
     const zodParsedData = productValidationSchema.parse(updatedProductData);
 
     // Update product in the database
@@ -108,78 +94,36 @@ const updateSingleProduct = async (req: Request, res: Response) => {
     if (updatedResult.modifiedCount > 0) {
       // Retrieve updated product
       const result = await ProductServices.getSingleProductFromDB(productId);
-
-      return res.status(200).json({
-        success: true,
-        message: 'Product updated successfully!',
-        data: result,
-      });
+      sendResponse(res, 200, true, 'Product updated successfully!', result);
     } else if (updatedResult.matchedCount > 0) {
-      return res.status(200).json({
-        success: false,
-        message: 'Product matched but not update!',
-        data: updatedResult,
-      });
+      sendResponse(
+        res,
+        200,
+        false,
+        'Product matched but not updated!',
+        updatedResult,
+      );
     } else {
-      res.status(400).json({
-        success: false,
-        message: 'Product not found!',
-      });
+      sendResponse(res, 400, false, 'Product not found!');
     }
   } catch (error) {
-    if (error instanceof Error && error.name === 'CastError') {
-      res.status(400).json({
-        success: false,
-        message: 'Product not found!',
-      });
-    }
-    // Custom error handling for duplicate key error
-    else if (error instanceof MongoError && error.code === 11000) {
-      res.status(400).json({
-        success: false,
-        message: 'Product with this name already exists!',
-      });
-    } else {
-      res.status(500).json({
-        success: false,
-        message: 'Failed to update product!',
-        error,
-      });
-    }
+    handleError(res, error, 'Failed to update product!');
   }
 };
 
-// get single product
+// Delete single product
 const deleteSingleProduct = async (req: Request, res: Response) => {
   try {
     const { productId } = req.params;
     const result = await ProductServices.deleteSingleProductFromDB(productId);
 
-    if (result)
-      res.status(200).json({
-        success: true,
-        message: 'Product deleted successfully!',
-        data: null,
-      });
-    else {
-      res.status(400).json({
-        success: false,
-        message: 'Product not found',
-      });
+    if (result) {
+      sendResponse(res, 200, true, 'Product deleted successfully!', null);
+    } else {
+      sendResponse(res, 400, false, 'Product not found!');
     }
   } catch (error) {
-    if (error instanceof Error && error.name === 'CastError') {
-      res.status(400).json({
-        success: false,
-        message: 'Product not found',
-      });
-    } else {
-      res.status(500).json({
-        success: false,
-        message: 'Failed to delete product!',
-        error,
-      });
-    }
+    handleError(res, error, 'Failed to delete product!');
   }
 };
 
