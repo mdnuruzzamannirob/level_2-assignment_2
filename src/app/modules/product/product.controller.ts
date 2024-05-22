@@ -60,13 +60,7 @@ const getAllProducts = async (req: Request, res: Response) => {
 const getSingleProduct = async (req: Request, res: Response) => {
   try {
     const { productId } = req.params;
-    if (productId) {
-    }
-    const query = req.query;
-    console.log(query);
     const result = await ProductServices.getSingleProductFromDB(productId);
-
-    console.log(result);
 
     res.status(200).json({
       success: true,
@@ -74,12 +68,18 @@ const getSingleProduct = async (req: Request, res: Response) => {
       data: result,
     });
   } catch (error) {
-    console.log(error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch Product!',
-      error,
-    });
+    if (error instanceof Error && error.name === 'CastError') {
+      res.status(400).json({
+        success: false,
+        message: 'Product not found!',
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        message: 'Failed to fetch product!',
+        error,
+      });
+    }
   }
 };
 
@@ -92,22 +92,53 @@ const updateSingleProduct = async (req: Request, res: Response) => {
     // zod validation
     const zodParsedData = productValidationSchema.parse(updatedProductData);
 
-    const result = await ProductServices.updateSingleProductFromDB(
+    // Update product in the database
+    const updatedResult = await ProductServices.updateSingleProductFromDB(
       productId,
       zodParsedData,
     );
 
-    res.status(200).json({
-      success: true,
-      message: 'Product updated successfully!',
-      data: result,
-    });
+    if (updatedResult.modifiedCount > 0) {
+      // Retrieve updated product
+      const result = await ProductServices.getSingleProductFromDB(productId);
+
+      return res.status(200).json({
+        success: true,
+        message: 'Product updated successfully!',
+        data: result,
+      });
+    } else if (updatedResult.matchedCount > 0) {
+      return res.status(200).json({
+        success: false,
+        message: 'Product matched but not update!',
+        data: updatedResult,
+      });
+    } else {
+      res.status(400).json({
+        success: false,
+        message: 'Product not found!',
+      });
+    }
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Failed to update Product!',
-      error,
-    });
+    if (error instanceof Error && error.name === 'CastError') {
+      res.status(400).json({
+        success: false,
+        message: 'Product not found!',
+      });
+    }
+    // Custom error handling for duplicate key error
+    else if (error instanceof MongoError && error.code === 11000) {
+      res.status(400).json({
+        success: false,
+        message: 'Product with this name already exists!',
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        message: 'Failed to update Product!',
+        error,
+      });
+    }
   }
 };
 
@@ -124,18 +155,24 @@ const deleteSingleProduct = async (req: Request, res: Response) => {
         data: null,
       });
     else {
-      res.status(500).json({
+      res.status(400).json({
         success: false,
-        message: 'Failed to delete Product!',
-        error: 'Product not found',
+        message: 'Product not found',
       });
     }
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Failed to delete Product!',
-      error,
-    });
+    if (error instanceof Error && error.name === 'CastError') {
+      res.status(400).json({
+        success: false,
+        message: 'Product not found',
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        message: 'Failed to delete Product!',
+        error,
+      });
+    }
   }
 };
 

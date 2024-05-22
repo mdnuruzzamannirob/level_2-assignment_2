@@ -49,17 +49,12 @@ const updateSingleProductFromDB = async (
   updatedProductData: TProduct,
 ) => {
   const updatedData = await ProductModel.updateOne({ _id }, updatedProductData);
-  if (updatedData.modifiedCount > 0) {
-    const result = await ProductModel.findOne({ _id });
-    return result;
-  }
   return updatedData;
 };
 
 // delete single product
 const deleteSingleProductFromDB = async (_id: string) => {
   const result = await ProductModel.findByIdAndDelete({ _id });
-  console.log(result);
   return result;
 };
 
