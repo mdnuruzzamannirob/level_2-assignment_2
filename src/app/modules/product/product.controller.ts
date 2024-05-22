@@ -62,11 +62,18 @@ const getSingleProduct = async (req: Request, res: Response) => {
     const { productId } = req.params;
     const result = await ProductServices.getSingleProductFromDB(productId);
 
-    res.status(200).json({
-      success: true,
-      message: 'Product fetched successfully!',
-      data: result,
-    });
+    if (result) {
+      res.status(200).json({
+        success: true,
+        message: 'Product fetched successfully!',
+        data: result,
+      });
+    } else {
+      res.status(400).json({
+        success: false,
+        message: 'Product not found!',
+      });
+    }
   } catch (error) {
     if (error instanceof Error && error.name === 'CastError') {
       res.status(400).json({
